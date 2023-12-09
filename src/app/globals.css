@@ -25,3 +25,37 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+/* Set the width and height of both horizontal and vertical scrollbars */
+::-webkit-scrollbar {
+  height: 0.25rem;
+  width: 0.25rem;
+}
+
+/* Customize the thumb of both horizontal and vertical scrollbars */
+::-webkit-scrollbar-thumb {
+  background-color: white;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Customize the track of both horizontal and vertical scrollbars */
+::-webkit-scrollbar-track {
+  background-color: transparent;
+  border-radius: 9999px;
+}
+
+/* Customize the thumb of the horizontal scrollbar */
+::-webkit-scrollbar-thumb:horizontal {
+  width: 0.2rem;
+}
+
+/* Customize the track of the horizontal scrollbar */
+::-webkit-scrollbar-track:horizontal {
+  height: 0.5rem;
+}
+
+/* Hide the vertical scrollbar */
+::-webkit-scrollbar-vertical {
+  display: none;
+}
