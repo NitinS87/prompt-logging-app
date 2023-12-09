@@ -1,8 +1,9 @@
 "use client";
+import DataTable from "@/components/DataTable";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
-type FilterModel = {
+export type FilterModel = {
   user: string;
   status: string;
   model: string;
@@ -10,7 +11,7 @@ type FilterModel = {
   days: string;
 };
 
-type DashboardData = {
+export type DashboardData = {
   user: string;
   status: string;
   request: string;
@@ -23,14 +24,20 @@ type DashboardData = {
   created_at: string;
 };
 
-type Aggregate = {
+export type Aggregate = {
   numberOfRequests: string;
   averageLatency: number;
   p95Latency: number;
   totalFailures: string;
   inputTokensPerSecond: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
 };
 
+export type Params = {
+  limit: string;
+  page: number;
+};
 const Dashboard = () => {
   const [data, setData] = useState<DashboardData[]>([]);
   const [aggregate, setAggregate] = useState<Aggregate>({
@@ -39,6 +46,8 @@ const Dashboard = () => {
     p95Latency: 0,
     totalFailures: "0",
     inputTokensPerSecond: 0,
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
   });
   const [filter, setFilter] = useState<FilterModel>({
     user: "",
@@ -177,8 +186,10 @@ const Dashboard = () => {
             onChange={(e) => handleSelectFilterChange(e)}
             value={filter.model}
           >
+            <option value="">all</option>
             <option value="gpt-3-turbo">gpt-3-turbo</option>
             <option value="gpt-4">gpt-4</option>
+            <option value="gpt-4-turbo">gpt-4-turbo</option>
           </select>
         </div>
         <div className="flex gap-2 items-center justify-between">
@@ -220,150 +231,16 @@ const Dashboard = () => {
           {loading ? "Loading" : "Extract"}
         </button>
       </form>
-      {loading ? (
-        <LoadingTableSkeleton />
-      ) : data.length === 0 ? (
-        <NoData />
-      ) : (
-        <div className="w-full overflow-hidden flex flex-col gap-2">
-          <div className="flex justify-between items-center w-full gap-2">
-            <span>Number Of Requests: {aggregate?.numberOfRequests}</span>
-            <span>Average Latency: {aggregate?.averageLatency}</span>
-            <span>p95 Latency: {aggregate?.p95Latency}</span>
-            <span>Total Failures: {aggregate?.totalFailures}</span>
-            <span>
-              Input Tokens Per Second: {aggregate?.inputTokensPerSecond}
-            </span>
-          </div>
-          <div className="w-full overflow-x-auto rounded-lg">
-            <table className="w-full whitespace-no-wrap shadow-md">
-              <thead>
-                <tr className="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b bg-gray-300">
-                  <th className="px-4 py-3">User</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Request</th>
-                  <th className="px-4 py-3">Response</th>
-                  <th className="px-4 py-3">Model</th>
-                  <th className="px-4 py-3">Prompt Tokens</th>
-                  <th className="px-4 py-3">Completion Tokens</th>
-                  <th className="px-4 py-3">Total Tokens</th>
-                  <th className="px-4 py-3">Latency</th>
-                  <th className="px-4 py-3">Created At</th>
-                </tr>
-              </thead>
-              <tbody className="bg-slate-100 divide-y">
-                {data.map((item, i) => (
-                  <tr key={i} className="text-gray-700">
-                    <td className="px-4 py-3">{item.user}</td>
-                    <td className="px-4 py-3">{item.status}</td>
-                    <td className="px-4 py-3">
-                      {item.request.slice(0, 15)}...
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.response.slice(0, 15)}...
-                    </td>
-                    <td className="px-4 py-3">{item.model}</td>
-                    <td className="px-4 py-3">{item.prompt_tokens}</td>
-                    <td className="px-4 py-3">{item.completion_tokens}</td>
-                    <td className="px-4 py-3">{item.total_tokens}</td>
-                    <td className="px-4 py-3">{item.latency}</td>
-                    <td className="px-4 py-3">{item.created_at}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex justify-end items-center gap-4 text-white">
-            {params.page > 1 && (
-              <button
-                className="border border-gray-300 rounded-md p-2 w-40 hover:bg-white hover:text-black ease-in-out duration-300 transition-colors"
-                onClick={() => setParams({ ...params, page: params.page - 1 })}
-              >
-                Previous
-              </button>
-            )}
-            {params.page * parseInt(params.limit) <
-              parseInt(aggregate?.numberOfRequests) && (
-              <button
-                className="border border-gray-300 rounded-md p-2 w-40 hover:bg-white hover:text-black ease-in-out duration-300 transition-colors"
-                onClick={() => setParams({ ...params, page: params.page + 1 })}
-              >
-                Next
-              </button>
-            )}
-            <div className="relative">
-              <select
-                id="limit"
-                value={params.limit}
-                onChange={(e) => handleLimitChange(e.target.value)}
-                className="p-2 rounded-md border-none outline-none bg-slate-800 w-40"
-              >
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="20">50</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
+      <DataTable
+        data={data}
+        aggregate={aggregate}
+        params={params}
+        setParams={setParams}
+        handleLimitChange={handleLimitChange}
+        loading={loading}
+      />
     </div>
   );
 };
 
-const LoadingTableSkeleton = () => {
-  return (
-    <div className="w-full overflow-hidden flex flex-col gap-2">
-      <div className="w-full overflow-x-auto rounded-lg">
-        <table className="w-full whitespace-no-wrap shadow-md">
-          <thead>
-            <tr className="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b bg-gray-300">
-              <th className="px-4 py-3">User</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Request</th>
-              <th className="px-4 py-3">Response</th>
-              <th className="px-4 py-3">Model</th>
-              <th className="px-4 py-3">Prompt Tokens</th>
-              <th className="px-4 py-3">Completion Tokens</th>
-              <th className="px-4 py-3">Total Tokens</th>
-              <th className="px-4 py-3">Latency</th>
-              <th className="px-4 py-3">Created At</th>
-            </tr>
-          </thead>
-          <tbody className="bg-slate-100 divide-y">
-            {[...Array(5)].map((item, i) => (
-              <tr key={i} className="text-gray-700">
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-                <td className="px-4 py-3 animate-pulse">-</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-// Show a div with a message if there is no data
-const NoData = () => {
-  return (
-    <div className="w-full h-full flex flex-col justify-center items-center">
-      <h2 className="text-2xl font-bold text-gray-700">
-        No data available for the selected filters.
-      </h2>
-      <p className="text-gray-500 text-center">
-        Try changing the filters or <br /> start a conversation with our
-        assistant.
-      </p>
-    </div>
-  );
-};
 export default Dashboard;
